@@ -1,6 +1,6 @@
 <?php
 
-class Proj4Class
+class CProj4
 {
 
     private $proj4string;
@@ -100,7 +100,7 @@ class Proj4Class
         ),
     );
 
-
+    // eg. "+proj=utm +zone=29 +ellps=clrk80 +towgs84=-124.76,53,466.79,0,0,0,0 +units=m +no_defs"
     function __construct($proj4string)
     {
 
@@ -108,12 +108,34 @@ class Proj4Class
 
         // Compute datum string and proj string.
         $rf = $this->ellipse["krass"]["rf"];
+
+        $hProj4 = array();
+        foreach (explode(" ", $proj4string) as $item) {
+            $aValue = explode("=", $item);
+            if (  isset($aValue[1]) ) {
+                $hProj4[$aValue[0]] = $aValue[1];
+            } else {
+                $hProj4[$aValue[0]] = true;
+            }
+        }
+
+        // Test the different kind of datum representation.
+        if (array_key_exists("+ellps", $hProj4)) {
+            // The ellipse is defined
+            $this->datumString = sprintf("%s %s %s",
+                $this->ellipse[$hProj4['+ellps']]['a'],
+                $this->ellipse[$hProj4['+ellps']]['ee'],
+                str_replace(",", " ", $hProj4['+towgs84']));
+            unset($hProj4['+towgs84']);
+            unset($hProj4['+ellps']);
+            var_dump($hProj4);
+        } else {
+            echo "Key does not exist!";
+        }
+
+        var_dump($this->getDatumString());
+        
     }
 }
-
-// Dans le constructeur de Proj4Class
-$obj = new Proj4Class("+proj=utm +zone=29 +ellps=clrk80 +towgs84=-124.76,53,466.79,0,0,0,0 +units=m +no_defs");
-
-printf('Returned string %s', $obj->getDatumString());
 
 ?>
